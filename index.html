@@ -80,11 +80,17 @@ button[aria-pressed="true"]{border-color:var(--info);color:var(--info)}
 .ins{display:flex;gap:14px;flex-wrap:wrap;margin:9px 0 4px;font-size:13px;color:var(--dim)}
 .ins span{display:inline-flex;align-items:center;gap:6px}
 .ins i{width:9px;height:9px;border-radius:50%;background:var(--line)}
-.ins .on.red i{background:var(--red)} .ins .on.yellow i{background:var(--yellow)} .ins .on.arr i{background:var(--ok)}
+.ins .on i{background:var(--ok)} .ins .v1 i{background:var(--red)} .ins .v2 i{background:var(--yellow)}
+.ins .v1,.ins .v2{color:var(--text)}
 .ins .on{color:var(--text)}
 .row{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--dim)}
 .row b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
 
+.artools{display:none;flex-wrap:wrap;gap:6px 12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;align-self:center;max-width:560px;width:100%}
+body.ar .artools{display:flex}
+.artools label{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:6px;flex:1 1 140px}
+.artools input{flex:1;accent-color:var(--safety);min-width:0}
+.artools button{padding:4px 9px;font-size:12px}
 #intro{position:fixed;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,27,35,.55)}
 #intro[hidden]{display:none}
 .card{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:22px 20px;max-width:380px;width:100%}
@@ -150,6 +156,12 @@ details pre{font:12px/1.5 var(--mono);background:var(--field);border-radius:8px;
 
   <div style="display:flex;flex-direction:column">
     <div class="hint" id="hint"></div>
+    <div class="artools">
+      <label>크기 <input type="range" id="arScale" min="0.5" max="3" step="0.05" value="1.5"></label>
+      <label>회전 <input type="range" id="arRot" min="-180" max="180" step="1" value="0"></label>
+      <label>세워보기 <input type="range" id="arTilt" min="0" max="70" step="1" value="0"></label>
+      <button type="button" id="arReset">원래대로</button>
+    </div>
     <section class="hud" id="hud">
       <div class="hud-head">
         <div class="seg" role="group" aria-label="데이터 소스">
@@ -179,7 +191,7 @@ details pre{font:12px/1.5 var(--mono);background:var(--field);border-radius:8px;
     <ol>
       <li><b>마커를 인쇄</b>해서 설비 옆 책상에 놓으세요. 화면에 띄운 마커도 돼요.</li>
       <li><b>AR로 보기</b>를 누르고 카메라를 허용하세요.</li>
-      <li>마커를 비추면 그 위에 설비가 나타나 움직여요.</li>
+      <li>마커를 비추면 그 위에 설비가 나타나요. 한 손가락으로 돌리고 두 손가락으로 키울 수 있어요.</li>
     </ol>
     <div class="btns">
       <button class="primary" id="introAR">AR로 보기</button>
@@ -206,7 +218,7 @@ details pre{font:12px/1.5 var(--mono);background:var(--field);border-radius:8px;
     <h2>PLC 연결</h2>
     <p class="warn" id="hostWarn">지금 페이지가 https라서 브로커 주소도 wss:// 여야 연결돼요. ws:// 브로커를 쓰려면 라즈베리파이에서 http로 띄운 페이지로 연결하세요.</p>
     <p class="note">라즈베리파이의 Mosquitto에 WebSocket 리스너(<code>listener 9001</code>, <code>protocol websockets</code>)가 있어야 해요.</p>
-    <div class="field"><label for="fUrl">브로커 주소</label><input id="fUrl" placeholder="ws://192.168.0.10:9001" autocomplete="off"></div>
+    <div class="field"><label for="fUrl">브로커 주소</label><input id="fUrl" placeholder="wss://브로커주소:포트" autocomplete="off"></div>
     <div class="grid2">
       <div class="field"><label for="fUser">사용자명 (선택)</label><input id="fUser" autocomplete="off"></div>
       <div class="field"><label for="fPass">비밀번호 (선택)</label><input id="fPass" type="password" autocomplete="off"></div>
@@ -218,18 +230,21 @@ details pre{font:12px/1.5 var(--mono);background:var(--field);border-radius:8px;
       <div class="field"><label for="aRobA">로봇 동작1</label><input id="aRobA"></div>
       <div class="field"><label for="aRobB">로봇 동작2</label><input id="aRobB"></div>
     </div>
-    <h3>입력 접점 (모르면 비워두세요)</h3>
+    <h3>입력과 데이터</h3>
     <div class="grid3">
-      <div class="field"><label for="aRed">빨강 감지</label><input id="aRed" placeholder="예: X3"></div>
-      <div class="field"><label for="aYel">노랑 감지</label><input id="aYel" placeholder="예: X4"></div>
-      <div class="field"><label for="aArr">도착 센서</label><input id="aArr" placeholder="예: X5"></div>
+      <div class="field"><label for="aStart">시작 센서</label><input id="aStart"></div>
+      <div class="field"><label for="aVis">비전 결과</label><input id="aVis"></div>
+      <div class="field"><label for="aArr">도착 센서</label><input id="aArr"></div>
     </div>
+    <p class="note">비전 결과 값: 1 = 빨강, 2 = 노랑, 0 = 없음</p>
     <details><summary>인식하는 메시지 형식</summary>
 <pre>토픽이 접점 이름으로 끝날 때
   plc/Y10  →  1 / 0, on / off, true / false
 한 토픽에 여러 접점
-  plc/io   →  {"Y10":1,"Y12":0,"Y14":0,"X3":1}
-  plc/io   →  Y10=1,Y12=0,Y14=0</pre></details>
+  plc/D100 →  0 / 1 / 2
+한 토픽에 여러 접점
+  plc/io   →  {"X0":1,"X2":0,"Y10":1,"D100":2}
+  plc/io   →  X0=1,Y10=1,D100=2</pre></details>
     <div class="actions">
       <button type="button" id="btnDisconnect">연결 끊기</button>
       <button type="button" id="btnSave">저장</button>
@@ -242,30 +257,32 @@ details pre{font:12px/1.5 var(--mono);background:var(--field);border-radius:8px;
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { MindARThree } from 'mindar-image-three';
 
 const $ = s => document.querySelector(s);
 const D2R = Math.PI / 180;
 const ease = f => f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* ================= 설정 ================= */
 const DEFAULT_CFG = {
-  url: 'ws://192.168.0.10:9001', username: '', password: '', topic: 'plc/#',
-  addr: { conv: 'Y10', robA: 'Y12', robB: 'Y14', xRed: '', xYel: '', xArr: '' },
+  url: 'wss://', username: '', password: '', topic: 'plc/#',
+  addr: { conv: 'Y10', robA: 'Y12', robB: 'Y14', xStart: 'X0', dVis: 'D100', xArr: 'X2' },
   autoConnect: false
 };
 function loadCfg() {
   const c = JSON.parse(JSON.stringify(DEFAULT_CFG));
   try {
-    const s = localStorage.getItem('factoryTwin.v2');
+    const s = localStorage.getItem('factoryTwin.v3');
     if (s) { const o = JSON.parse(s); Object.assign(c, o); c.addr = Object.assign({}, DEFAULT_CFG.addr, o.addr || {}); }
   } catch (e) {}
   return c;
 }
-function saveCfg() { try { localStorage.setItem('factoryTwin.v2', JSON.stringify(cfg)); } catch (e) {} }
+function saveCfg() { try { localStorage.setItem('factoryTwin.v3', JSON.stringify(cfg)); } catch (e) {} }
 let cfg = loadCfg();
 
-const LABEL = { conv: '컨베이어', robA: '로봇 동작1 (빨강)', robB: '로봇 동작2 (노랑)', xRed: '빨강 감지', xYel: '노랑 감지', xArr: '도착' };
+const LABEL = { conv: '컨베이어', robA: '로봇 동작1 (빨강)', robB: '로봇 동작2 (노랑)', xStart: '시작 센서', dVis: '비전', xArr: '도착 센서' };
 const norm = s => { s = String(s || '').trim().toUpperCase(); const m = s.match(/^([A-Z]+)0*([0-9A-F]+)$/); return m ? m[1] + m[2] : s; };
 const key = k => norm(cfg.addr[k]) || ('#' + k);
 const addrText = k => cfg.addr[k] ? norm(cfg.addr[k]) : '';
@@ -273,11 +290,13 @@ const addrText = k => cfg.addr[k] ? norm(cfg.addr[k]) : '';
 /* ================= I/O 상태 ================= */
 const io = {};
 const get = k => !!io[key(k)];
+const num = k => Number(io[key(k)] || 0);
 function setIO(k, v) {
-  const kk = key(k); v = !!v;
-  if (!!io[kk] === v) return;
+  const kk = key(k);
+  v = k === 'dVis' ? Number(v) : !!v;
+  if (io[kk] === v || (!io[kk] && v === false)) { io[kk] = v; return; }
   io[kk] = v;
-  log(addrText(k) || LABEL[k], v ? 'ON' : 'OFF');
+  log(addrText(k) || LABEL[k], typeof v === 'number' ? `= ${v}` : (v ? 'ON' : 'OFF'));
 }
 let mode = 'auto';
 const counts = { red: 0, yellow: 0 };
@@ -300,36 +319,45 @@ scene.background = BG;
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 50);
-camera.position.set(0.7, 0.62, 0.95);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0.06, 0);
+controls.target.set(0, 0.07, 0);
 controls.enableDamping = true; controls.minDistance = 0.25; controls.maxDistance = 4;
-controls.update();
 scene.add(new THREE.HemisphereLight(0xffffff, 0x2b3845, 0.75));
 const sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(1, 2, 1.2); scene.add(sun);
 const envGroup = new THREE.Group(); scene.add(envGroup);
-envGroup.add(new THREE.GridHelper(4, 40, 0x7d8a97, 0x9aa6b2));
-envGroup.children[0].material.opacity = 0.35; envGroup.children[0].material.transparent = true;
+{ const g = new THREE.GridHelper(4, 40, 0x7d8a97, 0x9aa6b2); g.material.opacity = 0.35; g.material.transparent = true; envGroup.add(g); }
 
 /* ================= 모델 (단위: m) ================= */
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.5, ...o });
 const M = {
-  alu: mat(0xb9c0c8, { metalness: 0.8, roughness: 0.35 }), white: mat(0xf1f1ee, { roughness: 0.4 }),
-  black: mat(0x1d2024), red: mat(0xd8322a, { roughness: 0.45 }), gray: mat(0x7d8691, { roughness: 0.6 }),
-  pcb: mat(0x1f6f4a, { roughness: 0.7 })
+  alu: mat(0xb9c0c8, { metalness: 0.8, roughness: 0.35 }), white: mat(0xf3f3f1, { roughness: 0.35 }),
+  black: mat(0x1d2024, { roughness: 0.45 }), dark: mat(0x3a3f46, { roughness: 0.5 }),
+  red: mat(0xd8322a, { roughness: 0.45 }), gray: mat(0x7d8691, { roughness: 0.6 }),
+  pcb: mat(0x1f6f4a, { roughness: 0.7 }), rubber: mat(0x9aa1a9, { roughness: 0.8 })
 };
 const COLOR = { red: 0xd8322a, yellow: 0xf2c230, unknown: 0xcfd4da };
 const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+const rbox = (w, h, d, r, m) => new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, r), m);
 const cyl = (rt, rb, h, m, seg = 24) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
 const at = (o, x, y, z) => { o.position.set(x, y, z); return o; };
+function label(text, color = '#1c2530') {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const x = c.getContext('2d');
+  x.fillStyle = 'rgba(255,255,255,.92)'; x.beginPath(); x.roundRect(4, 14, 248, 68, 18); x.fill();
+  x.fillStyle = color; x.font = '600 44px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text, 128, 50);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false }));
+  sp.scale.set(0.095, 0.036, 1); sp.renderOrder = 10; return sp;
+}
 
 const twin = new THREE.Group(); scene.add(twin);
 twin.add(at(box(0.9, 0.02, 0.56, M.alu), 0, 0.01, 0));
 for (const z of [-0.265, 0.265]) twin.add(at(box(0.9, 0.03, 0.03, M.alu), 0, 0.035, z));
 
-// 컨베이어
-const CONV = { x0: -0.38, x1: 0.22, z: 0.134, y: 0.1 };
-const PICK_X = 0.1, VIS_X = -0.25, BELT_V = 0.1;
+// 컨베이어: 시작(X0) → 비전 카메라 → 도착(X2, 로봇 픽업 위치)
+const CONV = { x0: -0.38, x1: 0.22, z: 0.12, y: 0.1 };
+const X0_X = -0.32, VIS_X = -0.14, X2_X = 0.06, BELT_V = 0.09;
 const convLen = CONV.x1 - CONV.x0, convMid = (CONV.x0 + CONV.x1) / 2;
 twin.add(at(box(convLen + 0.02, 0.06, 0.1, M.gray), convMid, 0.065, CONV.z));
 const bc = document.createElement('canvas'); bc.width = 256; bc.height = 32;
@@ -342,20 +370,27 @@ for (const x of [CONV.x0, CONV.x1]) { const r = cyl(0.018, 0.018, 0.09, M.alu); 
 for (const dz of [-0.047, 0.047]) twin.add(at(box(convLen, 0.02, 0.006, M.alu), convMid, CONV.y + 0.01, CONV.z + dz));
 const motor = cyl(0.024, 0.024, 0.06, M.black); motor.rotation.x = Math.PI / 2; twin.add(at(motor, CONV.x0, 0.07, CONV.z + 0.08));
 twin.add(at(box(0.1, 0.08, 0.13, M.red), CONV.x1 + 0.07, 0.1, CONV.z));
-twin.add(at(box(0.012, 0.018, 0.08, M.alu), PICK_X + 0.03, CONV.y + 0.009, CONV.z)); // 스토퍼
+twin.add(at(box(0.012, 0.018, 0.08, M.alu), X2_X + 0.03, CONV.y + 0.009, CONV.z)); // 스토퍼
 
-// 도착 센서
-const arrLed = new THREE.MeshStandardMaterial({ color: 0x113311, emissive: 0x000000 });
-twin.add(at(box(0.02, 0.03, 0.02, M.black), PICK_X, CONV.y + 0.02, CONV.z + 0.062));
-twin.add(at(new THREE.Mesh(new THREE.SphereGeometry(0.005, 12, 8), arrLed), PICK_X, CONV.y + 0.037, CONV.z + 0.062));
+// 광전 센서 (앞쪽 레일)
+function photoSensor(x, name) {
+  const led = new THREE.MeshStandardMaterial({ color: 0x113311, emissive: 0x000000 });
+  twin.add(at(box(0.02, 0.03, 0.02, M.black), x, CONV.y + 0.02, CONV.z + 0.062));
+  twin.add(at(new THREE.Mesh(new THREE.SphereGeometry(0.005, 12, 8), led), x, CONV.y + 0.037, CONV.z + 0.062));
+  twin.add(at(label(name), x, CONV.y + 0.07, CONV.z + 0.075));
+  return led;
+}
+const ledX0 = photoSensor(X0_X, 'X0');
+const ledX2 = photoSensor(X2_X, 'X2');
 
-// 컬러 감지 카메라
-twin.add(at(cyl(0.008, 0.008, 0.33, M.alu), VIS_X, 0.185, 0.02));
-twin.add(at(box(0.012, 0.012, 0.13, M.alu), VIS_X, 0.345, 0.075));
-twin.add(at(box(0.04, 0.03, 0.05, M.black), VIS_X, 0.335, CONV.z));
+// 비전 카메라 (컨베이어 중간)
+twin.add(at(cyl(0.008, 0.008, 0.33, M.alu), VIS_X, 0.185, 0.03));
+twin.add(at(box(0.012, 0.012, 0.1, M.alu), VIS_X, 0.345, 0.075));
+twin.add(at(box(0.05, 0.03, 0.044, M.black), VIS_X, 0.335, CONV.z));
 const fovMat = new THREE.MeshBasicMaterial({ color: 0x5aa9e6, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false });
 const fov = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.2, 4, 1, true), fovMat);
 fov.rotation.y = Math.PI / 4; twin.add(at(fov, VIS_X, 0.22, CONV.z));
+const visLabel = label('비전 D100'); visLabel.scale.set(0.13, 0.036, 1); twin.add(at(visLabel, VIS_X, 0.39, CONV.z));
 
 // 제어 박스, 보드, 경광등
 twin.add(at(box(0.16, 0.07, 0.1, M.gray), -0.3, 0.055, -0.16));
@@ -368,88 +403,120 @@ const lamps = {};
   lamps[k] = m; twin.add(at(cyl(0.017, 0.017, 0.03, m), -0.4, 0.235 + i * 0.032, -0.23));
 });
 
-// 로봇팔
-const robot = new THREE.Group(); robot.position.set(0.1, 0.02, -0.1); robot.rotation.y = -Math.PI / 2; twin.add(robot);
-robot.add(at(cyl(0.065, 0.075, 0.05, M.white, 32), 0, 0.025, 0));
+/* ---------- Dobot Magician 형태의 로봇 ----------
+   J1 베이스 회전, J2 뒷팔(수직 기준), J3 앞팔(수평 기준, 평행 링크),
+   J4 엔드툴 회전. 엔드툴은 평행 링크 덕분에 항상 수직을 유지. */
+const RB = new THREE.Vector3(0.02, 0.02, -0.1);
+const H0 = 0.138, L1 = 0.135, L2 = 0.147, TF = 0.06, TL = 0.07;
+const robot = at(new THREE.Group(), RB.x, RB.y, RB.z); twin.add(robot);
+robot.add(at(rbox(0.158, 0.045, 0.158, 0.012, M.white), 0, 0.0225, 0));
+robot.add(at(cyl(0.072, 0.072, 0.006, M.dark, 40), 0, 0.048, 0));
 const j1 = at(new THREE.Group(), 0, 0.05, 0); robot.add(j1);
-j1.add(at(cyl(0.05, 0.055, 0.05, M.white, 32), 0, 0.025, 0));
-const j2 = at(new THREE.Group(), 0, 0.07, 0); j1.add(j2);
-{ const h = cyl(0.035, 0.035, 0.09, M.black); h.rotation.x = Math.PI / 2; j2.add(h); }
-j2.add(at(box(0.045, 0.19, 0.05, M.white), 0, 0.095, 0));
-const j3 = at(new THREE.Group(), 0, 0.19, 0); j2.add(j3);
-{ const h = cyl(0.03, 0.03, 0.08, M.black); h.rotation.x = Math.PI / 2; j3.add(h); }
-const j4 = new THREE.Group(); j3.add(j4);
-j4.add(at(box(0.16, 0.035, 0.04, M.black), 0.08, 0, 0));
-const j5 = at(new THREE.Group(), 0.16, 0, 0); j4.add(j5);
-{ const h = cyl(0.022, 0.022, 0.05, M.white); h.rotation.x = Math.PI / 2; j5.add(h); }
-j5.add(at(box(0.05, 0.03, 0.03, M.white), 0.025, 0, 0));
-const j6 = at(new THREE.Group(), 0.05, 0, 0); j5.add(j6);
-{ const f = cyl(0.02, 0.02, 0.012, M.black); f.rotation.z = Math.PI / 2; j6.add(at(f, 0.006, 0, 0)); }
-j6.add(at(box(0.02, 0.02, 0.07, M.black), 0.022, 0, 0));
-const fingerL = at(box(0.045, 0.014, 0.006, M.gray), 0.055, 0, 0.03); j6.add(fingerL);
-const fingerR = at(box(0.045, 0.014, 0.006, M.gray), 0.055, 0, -0.03); j6.add(fingerR);
-const tip = at(new THREE.Object3D(), 0.055, 0, 0); j6.add(tip);
-const J = [j1, j2, j3, j4, j5, j6], AX = ['y', 'z', 'z', 'x', 'z', 'x'];
-const q = [0, 0, 0, 0, 0, 0]; let grip = 1;
+j1.add(at(cyl(0.064, 0.066, 0.045, M.white, 40), 0, 0.0225, 0));
+const SH = new THREE.Vector3(0, H0 - 0.05, 0); // 어깨 축 (j1 기준)
+j1.add(at(rbox(0.07, 0.06, 0.07, 0.01, M.white), 0.0, SH.y - 0.02, 0));
+for (const zz of [-0.047, 0.047]) {
+  j1.add(at(rbox(0.045, 0.045, 0.03, 0.004, M.black), 0, SH.y, zz));
+  const cap = cyl(0.016, 0.016, 0.006, M.dark); cap.rotation.x = Math.PI / 2; j1.add(at(cap, 0, SH.y, zz + Math.sign(zz) * 0.018));
+}
+const rear = at(new THREE.Group(), SH.x, SH.y, SH.z); j1.add(rear);
+rear.add(at(rbox(0.028, L1 + 0.02, 0.05, 0.008, M.black), 0, L1 / 2, 0));
+rear.add(at(box(0.03, L1 * 0.55, 0.052, M.white), 0, L1 * 0.5, 0));
+const fore = new THREE.Group(); j1.add(fore);
+fore.add(at(rbox(L2 + 0.035, 0.026, 0.036, 0.008, M.white), L2 / 2 - 0.012, 0, 0));
+fore.add(at(box(L2 * 0.6, 0.028, 0.038, M.black), L2 * 0.45, 0, 0));
+{ const h = cyl(0.018, 0.018, 0.056, M.dark); h.rotation.x = Math.PI / 2; fore.add(h); }
+const rod = cyl(0.004, 0.004, 1, M.alu, 10); j1.add(rod);          // 평행 링크 막대
+const rodTmp = new THREE.Vector3(), rodUp = new THREE.Vector3(0, 1, 0);
+const eff = new THREE.Group(); j1.add(eff);                           // 손목 (항상 수평 유지)
+eff.add(at(box(TF + 0.014, 0.014, 0.03, M.black), TF / 2, 0.0, 0));
+const tool = at(new THREE.Group(), TF, 0, 0); eff.add(tool);          // J4 회전
+tool.add(at(box(0.026, 0.024, 0.026, M.dark), 0, -0.016, 0));
+tool.add(at(rbox(0.036, 0.026, 0.05, 0.004, M.black), 0, -0.042, 0));
+const fingerL = at(box(0.012, 0.032, 0.006, M.rubber), 0, -0.068, 0.03); tool.add(fingerL);
+const fingerR = at(box(0.012, 0.032, 0.006, M.rubber), 0, -0.068, -0.03); tool.add(fingerR);
+const q = [0, 0, 0, 0]; let grip = 1;
+
+function ik(p) { // p: 트윈 좌표의 그리퍼 끝 위치 → [J1,J2,J3] (도)
+  const dx = p.x - RB.x, dz = p.z - RB.z;
+  const a1 = Math.atan2(-dz, dx);
+  const r = Math.hypot(dx, dz) - TF, h = (p.y + TL) - (RB.y + H0);
+  const c = clamp((r * r + h * h - L1 * L1 - L2 * L2) / (2 * L1 * L2), -1, 1);
+  const q2 = -Math.acos(c);
+  const th1 = Math.atan2(h, r) - Math.atan2(L2 * Math.sin(q2), L1 + L2 * Math.cos(q2));
+  return [a1 / D2R, 90 - th1 / D2R, -(th1 + q2) / D2R];
+}
 function applyPose() {
-  for (let i = 0; i < 6; i++) J[i].rotation[AX[i]] = q[i] * D2R;
-  const gz = 0.025 + 0.012 * grip; fingerL.position.z = gz; fingerR.position.z = -gz;
+  const a2 = q[1] * D2R, a3 = q[2] * D2R;
+  j1.rotation.y = q[0] * D2R;
+  rear.rotation.z = -a2;
+  const E = new THREE.Vector3(SH.x + L1 * Math.sin(a2), SH.y + L1 * Math.cos(a2), 0);
+  fore.position.copy(E); fore.rotation.z = -a3;
+  const u = new THREE.Vector3(Math.cos(a3), -Math.sin(a3), 0);
+  eff.position.copy(E).addScaledVector(u, L2);
+  tool.rotation.y = q[3] * D2R;
+  // 평행 링크 막대: 어깨 뒤쪽에서 앞팔 뒤끝까지, 뒷팔과 평행
+  const A = SH.clone().addScaledVector(u, -0.03).add(new THREE.Vector3(0, 0, 0.034));
+  const B = E.clone().addScaledVector(u, -0.03).add(new THREE.Vector3(0, 0, 0.034));
+  rod.position.copy(A).add(B).multiplyScalar(0.5);
+  rodTmp.subVectors(B, A); rod.scale.set(1, rodTmp.length(), 1);
+  rod.quaternion.setFromUnitVectors(rodUp, rodTmp.normalize());
+  const gz = 0.026 + 0.01 * grip; fingerL.position.z = gz; fingerR.position.z = -gz;
 }
 
-// 로봇 동작 (dir +1: 빨강 트레이, -1: 노랑 트레이)
-const PLACE = s => [85 * s, -28, 0, 0, -62, 0];
-const ROUTINE = s => [
-  { q: [0, -20, 10, 0, -80, 0], g: 1, t: 0.7 },
-  { q: [0, -30, 0, 0, -60, 0], g: 1, t: 0.5 },
-  { q: [0, -30, 0, 0, -60, 0], g: 0, t: 0.35, ev: 'grip' },
-  { q: [0, -15, 15, 0, -90, 0], g: 0, t: 0.5 },
-  { q: [85 * s, -15, 15, 0, -90, 0], g: 0, t: 1.0 },
-  { q: PLACE(s), g: 0, t: 0.5 },
-  { q: PLACE(s), g: 1, t: 0.3, ev: 'release' },
-  { q: [85 * s, -10, 20, 0, -90, 0], g: 1, t: 0.5 },
-  { q: [0, 0, 0, 0, 0, 0], g: 1, t: 1.0 }
-];
-
-// 트레이 위치는 로봇 놓는 자세에서 계산
-function tipAt(pose) {
-  pose.forEach((a, i) => q[i] = a); applyPose(); twin.updateMatrixWorld(true);
-  const v = new THREE.Vector3(); tip.getWorldPosition(v); return twin.worldToLocal(v);
-}
+// 트레이: 빨강(왼쪽), 노랑(오른쪽) 나란히
+const TRAY = { red: new THREE.Vector3(0.19, 0.02, -0.2), yellow: new THREE.Vector3(0.30, 0.02, -0.2) };
 const bins = {};
-for (const [name, s, col] of [['red', 1, 0xd8322a], ['yellow', -1, 0xe6b21e]]) {
-  const p = tipAt(PLACE(s));
-  const g = new THREE.Group(); g.position.set(p.x, 0.02, p.z); twin.add(g);
+for (const [name, col] of [['red', 0xd8322a], ['yellow', 0xe6b21e]]) {
+  const g = new THREE.Group(); g.position.copy(TRAY[name]); twin.add(g);
   const wall = new THREE.MeshStandardMaterial({ color: col, roughness: 0.6, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
-  g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.05, 0.05, 28, 1, true), wall), 0, 0.025, 0));
-  g.add(at(cyl(0.05, 0.05, 0.004, mat(0x555b63), 28), 0, 0.002, 0));
+  g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.042, 0.045, 28, 1, true), wall), 0, 0.0225, 0));
+  g.add(at(cyl(0.042, 0.042, 0.004, mat(0x555b63), 28), 0, 0.002, 0));
   bins[name] = { group: g, items: [] };
 }
-q.fill(0); applyPose();
 
-/* ================= 제품 ================= */
+const P = (x, y, z) => new THREE.Vector3(x, y, z);
+const PICK = P(X2_X, CONV.y + 0.02, CONV.z);
+const HOME = P(0.2, 0.2, 0.0);
+{ const h = ik(HOME); q[0] = h[0]; q[1] = h[1]; q[2] = h[2]; applyPose(); }
+const ROUTINE = color => {
+  const T = TRAY[color];
+  return [
+    { p: P(PICK.x, 0.19, PICK.z), g: 1, j4: 0, t: 0.8 },
+    { p: PICK, g: 1, j4: 0, t: 0.5 },
+    { p: PICK, g: 0, j4: 0, t: 0.35, ev: 'grip' },
+    { p: P(PICK.x, 0.19, PICK.z), g: 0, j4: 0, t: 0.5 },
+    { p: P(T.x, 0.19, T.z), g: 0, j4: 30, t: 1.1 },
+    { p: P(T.x, 0.135, T.z), g: 0, j4: 30, t: 0.45 },
+    { p: P(T.x, 0.135, T.z), g: 1, j4: 30, t: 0.3, ev: 'release' },
+    { p: P(T.x, 0.19, T.z), g: 1, j4: 0, t: 0.4 },
+    { p: HOME, g: 1, j4: 0, t: 0.8 }
+  ].map(k => ({ ...k, q: [...ik(k.p), k.j4] }));
+};
+
+/* ================= 제품(컵) ================= */
 const products = [];
 const cupGeo = new THREE.CylinderGeometry(0.02, 0.017, 0.04, 20);
 let spawnT = 0;
-function spawnProduct() {
+function spawnProduct(known = true) {
   const color = Math.random() < 0.5 ? 'red' : 'yellow';
-  const shown = mode === 'mqtt' ? 'unknown' : color;
-  const m = new THREE.Mesh(cupGeo, mat(COLOR[shown], { roughness: 0.4 }));
-  at(m, CONV.x0 + 0.03, CONV.y + 0.02, CONV.z); twin.add(m);
-  products.push({ mesh: m, color: mode === 'mqtt' ? null : color, state: 'belt', vy: 0 });
+  const m = new THREE.Mesh(cupGeo, mat(known ? COLOR[color] : COLOR.unknown, { roughness: 0.4 }));
+  at(m, CONV.x0 + 0.04, CONV.y + 0.02, CONV.z); twin.add(m);
+  products.push({ mesh: m, color: known ? color : null, state: 'belt', scanned: false, vy: 0 });
 }
 function paint(p, color) { p.color = color; p.mesh.material.color.set(COLOR[color]); }
 
 /* ================= 로봇 재생기 ================= */
-const robo = { busy: false, kfs: null, i: 0, t: 0, from: null, fromG: 1, dir: 1, held: null, doneSeq: 0 };
-function startRoutine(dir) {
+const robo = { busy: false, kfs: null, i: 0, t: 0, from: null, fromG: 1, color: 'red', held: null, doneSeq: 0 };
+function startRoutine(color) {
   if (robo.busy) return;
-  Object.assign(robo, { busy: true, kfs: ROUTINE(dir), i: 0, t: 0, from: q.slice(), fromG: grip, dir });
+  Object.assign(robo, { busy: true, kfs: ROUTINE(color), i: 0, t: 0, from: q.slice(), fromG: grip, color });
 }
 function stepRobot(dt) {
   if (!robo.busy) return;
   const kf = robo.kfs[robo.i]; robo.t += dt;
   const f = Math.min(robo.t / kf.t, 1), e = ease(f);
-  for (let k = 0; k < 6; k++) q[k] = robo.from[k] + (kf.q[k] - robo.from[k]) * e;
+  for (let k = 0; k < 4; k++) q[k] = robo.from[k] + (kf.q[k] - robo.from[k]) * e;
   grip = robo.fromG + (kf.g - robo.fromG) * e;
   if (f >= 1) {
     if (kf.ev === 'grip') grab();
@@ -459,79 +526,90 @@ function stepRobot(dt) {
   }
 }
 function grab() {
-  const p = products.find(p => p.state === 'belt' && p.mesh.position.x >= PICK_X - 0.012);
+  const p = products.find(p => p.state === 'belt' && p.mesh.position.x >= X2_X - 0.015);
   if (!p) return;
-  twin.updateMatrixWorld(true); j6.attach(p.mesh); p.state = 'held'; robo.held = p;
+  twin.updateMatrixWorld(true); tool.attach(p.mesh); p.state = 'held'; robo.held = p;
 }
 function release() {
   const p = robo.held; if (!p) return;
   twin.updateMatrixWorld(true); twin.attach(p.mesh); p.mesh.quaternion.identity();
-  p.state = 'falling'; p.vy = 0; p.bin = robo.dir > 0 ? 'red' : 'yellow';
-  p.off = [(Math.random() - 0.5) * 0.04, (Math.random() - 0.5) * 0.04];
+  p.state = 'falling'; p.vy = 0; p.bin = robo.color;
+  p.off = [(Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03];
   robo.held = null;
 }
 
 /* ================= 더미 PLC (자동 시퀀스) ================= */
-const plc = { step: 0, t: 0, color: null, seq: 0 };
+const plc = { step: 0, t: 0, seq: 0, vis: 0 };
 const go = s => { plc.step = s; plc.t = 0; };
 function plcScan(dt) {
   plc.t += dt;
   switch (plc.step) {
-    case 0: plc.color = null; setIO('conv', true); go(1); break;
+    case 0: if (get('xStart')) { setIO('conv', true); go(1); } break;
     case 1:
-      if (get('xRed')) plc.color = 'red';
-      if (get('xYel')) plc.color = 'yellow';
+      if (num('dVis')) plc.vis = num('dVis');
       if (get('xArr')) { setIO('conv', false); go(2); }
       break;
     case 2:
-      if (plc.t > 0.4) { plc.seq = robo.doneSeq; setIO(plc.color === 'red' ? 'robA' : 'robB', true); go(3); }
+      if (plc.t > 0.4) { plc.seq = robo.doneSeq; setIO(plc.vis === 1 ? 'robA' : 'robB', true); go(3); }
       break;
     case 3:
-      if (robo.doneSeq !== plc.seq && !robo.busy) { setIO('robA', false); setIO('robB', false); go(4); }
+      if (robo.doneSeq !== plc.seq && !robo.busy) { setIO('robA', false); setIO('robB', false); setIO('dVis', 0); plc.vis = 0; go(4); }
       break;
     case 4: if (plc.t > 0.4) go(0); break;
   }
 }
+const colorName = v => v === 1 ? '빨강' : v === 2 ? '노랑' : '';
 function stepText() {
+  const busy = robo.busy ? (robo.color === 'red' ? '로봇 동작1: 빨강 트레이로 이송' : '로봇 동작2: 노랑 트레이로 이송') : null;
   if (mode === 'auto') {
-    const c = plc.color === 'red' ? '빨강' : plc.color === 'yellow' ? '노랑' : null;
     return [
-      '시작', c ? `반송 중, ${c} 물체 판별됨` : '반송 중, 물체 색 확인 대기',
-      '도착, 컨베이어 정지', robo.dir > 0 ? `로봇 동작1: 빨강 트레이로 이송` : `로봇 동작2: 노랑 트레이로 이송`, '원위치 복귀'
+      '컵 투입 대기 (X0)',
+      num('dVis') ? `반송 중, 비전 판정 ${colorName(num('dVis'))} (D100=${num('dVis')})` : '반송 중, 비전 판정 대기',
+      '도착 (X2), 컨베이어 정지', busy || '로봇 동작 완료', '원위치 복귀'
     ][plc.step];
   }
-  if (mode === 'manual') return robo.busy ? (robo.dir > 0 ? '로봇 동작1 실행 중' : '로봇 동작2 실행 중') : '출력 버튼을 눌러 직접 시험하세요';
-  return client && client.connected ? (robo.busy ? (robo.dir > 0 ? '로봇 동작1 실행 중' : '로봇 동작2 실행 중') : 'PLC 신호 대기') : '브로커에 연결되지 않았어요';
+  if (mode === 'manual') return busy || '출력 버튼을 눌러 직접 시험하세요';
+  return client && client.connected ? (busy || 'PLC 신호 대기') : '브로커에 연결되지 않았어요';
 }
 
 /* ================= 매 프레임 ================= */
-let prevA = false, prevB = false, prevRed = false, prevYel = false;
+let prevA = false, prevB = false, prevStart = false, prevVis = 0;
 function update(dt) {
   if (mode === 'auto') plcScan(dt);
 
   const a = get('robA'), b = get('robB');
-  if (a && !prevA) startRoutine(1);
-  if (b && !prevB) startRoutine(-1);
+  if (a && !prevA) startRoutine('red');
+  if (b && !prevB) startRoutine('yellow');
   prevA = a; prevB = b;
   const wasBusy = robo.busy;
   stepRobot(dt);
-  if (mode === 'manual' && wasBusy && !robo.busy) { setIO('robA', false); setIO('robB', false); }
+  if (mode === 'manual' && wasBusy && !robo.busy) { setIO('robA', false); setIO('robB', false); setIO('dVis', 0); }
   applyPose();
 
-  // 컨베이어와 제품
   const running = get('conv');
   const v = running ? BELT_V : 0;
   beltTex.offset.x -= v * dt / convLen * beltTex.repeat.x;
   const onBelt = products.filter(p => p.state === 'belt');
-  if (running && onBelt.length === 0) { spawnT += dt; if (spawnT > 0.8) { spawnT = 0; spawnProduct(); } } else spawnT = 0;
 
-  let underCam = null, arrived = false;
+  // 컵 투입: 시뮬레이션은 벨트가 비면 새 컵, MQTT는 X0이 켜질 때 새 컵
+  if (mode !== 'mqtt') {
+    if (onBelt.length === 0 && !robo.held) { spawnT += dt; if (spawnT > 1.2) { spawnT = 0; spawnProduct(true); } } else spawnT = 0;
+  } else {
+    const s = get('xStart');
+    if (s && !prevStart && onBelt.length < 3) spawnProduct(false);
+    prevStart = s;
+  }
+
+  let atStart = false, arrived = false;
   for (let i = products.length - 1; i >= 0; i--) {
     const p = products[i], m = p.mesh;
     if (p.state === 'belt') {
-      m.position.x = Math.min(m.position.x + v * dt, PICK_X);
-      if (Math.abs(m.position.x - VIS_X) < 0.03) underCam = p;
-      if (m.position.x >= PICK_X - 0.005) arrived = true;
+      m.position.x = Math.min(m.position.x + v * dt, X2_X);
+      if (Math.abs(m.position.x - X0_X) < 0.04) atStart = true;
+      if (m.position.x >= X2_X - 0.005) arrived = true;
+      if (mode !== 'mqtt' && !p.scanned && m.position.x >= VIS_X) {
+        p.scanned = true; setIO('dVis', p.color === 'red' ? 1 : 2); fovMat.opacity = 0.35;
+      }
     } else if (p.state === 'falling') {
       const bin = bins[p.bin].group.position;
       p.vy -= 3 * dt; m.position.y += p.vy * dt;
@@ -541,28 +619,23 @@ function update(dt) {
         m.position.y = 0.044; p.state = 'binned';
         const list = bins[p.bin].items; list.push(p);
         if (p.color) counts[p.color]++;
-        if (list.length > 4) { const old = list.shift(); twin.remove(old.mesh); old.mesh.material.dispose(); products.splice(products.indexOf(old), 1); }
+        if (list.length > 3) { const old = list.shift(); twin.remove(old.mesh); old.mesh.material.dispose(); products.splice(products.indexOf(old), 1); }
       }
     }
   }
-
-  // 센서: 시뮬레이션 모드는 트윈이 입력을 만들고, MQTT 모드는 PLC 입력을 따름
-  if (mode !== 'mqtt') {
-    setIO('xRed', underCam && underCam.color === 'red');
-    setIO('xYel', underCam && underCam.color === 'yellow');
-    setIO('xArr', arrived);
-  } else {
-    const r = get('xRed'), y = get('xYel');
-    const target = () => products.filter(p => p.state === 'belt' && !p.color).sort((a, b) => Math.abs(a.mesh.position.x - VIS_X) - Math.abs(b.mesh.position.x - VIS_X))[0];
-    if (r && !prevRed) { const p = target(); if (p) paint(p, 'red'); }
-    if (y && !prevYel) { const p = target(); if (p) paint(p, 'yellow'); }
-    prevRed = r; prevYel = y;
+  if (mode !== 'mqtt') { setIO('xStart', atStart); setIO('xArr', arrived); }
+  else {
+    const vis = num('dVis');
+    if (vis && vis !== prevVis) {
+      const p = products.filter(p => p.state === 'belt' && !p.color).sort((a, b) => b.mesh.position.x - a.mesh.position.x)[0];
+      if (p) paint(p, vis === 1 ? 'red' : 'yellow');
+      fovMat.opacity = 0.35;
+    }
+    prevVis = vis;
   }
-  const colorOn = get('xRed') || get('xYel');
-  if (colorOn) fovMat.opacity = 0.3;
   fovMat.opacity += (0.07 - fovMat.opacity) * (1 - Math.exp(-dt * 4));
-  arrLed.emissive.set(get('xArr') ? 0x33ff66 : 0x000000);
-
+  ledX0.emissive.set(get('xStart') ? 0x33ff66 : 0x000000);
+  ledX2.emissive.set(get('xArr') ? 0x33ff66 : 0x000000);
   lamps.green.emissiveIntensity = running ? 1.8 : 0.05;
   lamps.amber.emissiveIntensity = robo.busy ? 1.8 : 0.05;
   lamps.red.emissiveIntensity = !running && !robo.busy ? 1.2 : 0.05;
@@ -572,8 +645,9 @@ function update(dt) {
 const OUTS = ['conv', 'robA', 'robB'];
 function buildHud() {
   $('#outs').innerHTML = OUTS.map(k => `<button class="chip" data-k="${k}"><b><i></i>${addrText(k) || '–'}</b><small>${LABEL[k]}</small></button>`).join('');
-  $('#ins').innerHTML = [['xRed', 'red'], ['xYel', 'yellow'], ['xArr', 'arr']]
-    .map(([k, c]) => `<span data-k="${k}" class="${c}"><i></i>${LABEL[k]}${addrText(k) ? ' ' + addrText(k) : ''}</span>`).join('');
+  $('#ins').innerHTML = `<span data-k="xStart"><i></i>${addrText('xStart')} ${LABEL.xStart}</span>
+    <span data-k="dVis" id="visChip"><i></i>${addrText('dVis')} <b id="visVal">0</b></span>
+    <span data-k="xArr"><i></i>${addrText('xArr')} ${LABEL.xArr}</span>`;
   document.querySelectorAll('#outs .chip').forEach(el => el.onclick = () => {
     if (mode !== 'manual') { toast('출력을 직접 켜려면 수동 모드로 바꾸세요'); return; }
     const k = el.dataset.k;
@@ -584,7 +658,10 @@ function buildHud() {
 buildHud();
 function renderHud() {
   document.querySelectorAll('#outs .chip').forEach(el => { el.classList.toggle('on', get(el.dataset.k)); el.classList.toggle('manual', mode === 'manual'); });
-  document.querySelectorAll('#ins span').forEach(el => el.classList.toggle('on', get(el.dataset.k)));
+  for (const k of ['xStart', 'xArr']) document.querySelector(`#ins [data-k="${k}"]`).classList.toggle('on', get(k));
+  const v = num('dVis'), vc = $('#visChip');
+  vc.classList.toggle('v1', v === 1); vc.classList.toggle('v2', v === 2);
+  $('#visVal').textContent = v ? `${v} ${colorName(v)}` : '0 판정 없음';
   $('#step').textContent = stepText();
   $('#cRed').textContent = counts.red; $('#cYel').textContent = counts.yellow;
   $('#lastWrap').hidden = mode !== 'mqtt';
@@ -600,8 +677,8 @@ function setMode(m) {
   if (m === 'mqtt' && !(client && client.connected)) { openSettings(); toast('MQTT 모드는 브로커 연결 후 쓸 수 있어요'); return; }
   mode = m;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
-  for (const k in io) io[k] = false;
-  prevRed = prevYel = false;
+  for (const k in io) io[k] = typeof io[k] === 'number' ? 0 : false;
+  prevStart = false; prevVis = 0;
   if (m === 'auto') { if (robo.busy) { go(3); plc.seq = robo.doneSeq; } else go(0); }
   setStatus(m === 'mqtt' ? 'live' : 'sim');
   log('모드', { auto: '자동 시퀀스', manual: '수동', mqtt: 'MQTT' }[m]);
@@ -631,7 +708,7 @@ function setStatus(s, text) {
   const el = $('#status'); el.dataset.s = s;
   el.querySelector('span').textContent = text || { live: '실시간', sim: '더미 데이터', connecting: '연결 중', offline: '연결 끊김', error: '연결 오류' }[s];
 }
-const ADDR_RE = /^[XYM][0-9A-F]+$/i;
+const ADDR_RE = /^[XYMD][0-9A-F]+$/i;
 function tryJSON(s) { try { return JSON.parse(s); } catch { return undefined; } }
 function parseBool(s) {
   const t = String(s).trim().toLowerCase().replace(/"/g, '');
@@ -639,18 +716,22 @@ function parseBool(s) {
   if (['0', 'false', 'off', 'stop'].includes(t)) return false;
   const n = parseFloat(t); return isFinite(n) ? n !== 0 : null;
 }
+function parseVal(addr, x) {
+  if (/^D/i.test(addr)) { const n = parseFloat(typeof x === 'object' && x ? (x.value ?? x.v) : x); return isFinite(n) ? n : null; }
+  return parseBool(x);
+}
 function handle(topic, msg) {
   log(topic, msg);
   if (mode !== 'mqtt') return;
   lastMsg = performance.now();
   const seg = topic.split('/').pop(), upd = {};
-  if (ADDR_RE.test(seg)) { const b = parseBool(msg); if (b !== null) upd[norm(seg)] = b; }
+  if (ADDR_RE.test(seg)) { const v = parseVal(seg, tryJSON(msg) ?? msg); if (v !== null) upd[norm(seg)] = v; }
   else {
-    const v = tryJSON(msg);
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      for (const [k, x] of Object.entries(v)) if (ADDR_RE.test(k)) { const b = parseBool(x); if (b !== null) upd[norm(k)] = b; }
+    const o = tryJSON(msg);
+    if (o && typeof o === 'object' && !Array.isArray(o)) {
+      for (const [k, x] of Object.entries(o)) if (ADDR_RE.test(k)) { const v = parseVal(k, x); if (v !== null) upd[norm(k)] = v; }
     } else {
-      String(msg).split(/[,;\s]+/).forEach(tok => { const m = tok.match(/^([XYM][0-9A-F]+)[:=](.+)$/i); if (m) { const b = parseBool(m[2]); if (b !== null) upd[norm(m[1])] = b; } });
+      String(msg).split(/[,;\s]+/).forEach(tok => { const m = tok.match(/^([XYMD][0-9A-F]+)[:=](.+)$/i); if (m) { const v = parseVal(m[1], m[2]); if (v !== null) upd[norm(m[1])] = v; } });
     }
   }
   Object.assign(io, upd);
@@ -676,7 +757,7 @@ function disconnect(silent) {
 
 /* ================= 설정 창 ================= */
 const F = { url: '#fUrl', username: '#fUser', password: '#fPass', topic: '#fTopic' };
-const A = { conv: '#aConv', robA: '#aRobA', robB: '#aRobB', xRed: '#aRed', xYel: '#aYel', xArr: '#aArr' };
+const A = { conv: '#aConv', robA: '#aRobA', robB: '#aRobB', xStart: '#aStart', dVis: '#aVis', xArr: '#aArr' };
 function openSettings() {
   for (const k in F) $(F[k]).value = cfg[k];
   for (const k in A) $(A[k]).value = cfg.addr[k];
@@ -686,7 +767,7 @@ function openSettings() {
 function readForm() {
   for (const k in F) cfg[k] = $(F[k]).value.trim();
   for (const k in A) cfg.addr[k] = norm($(A[k]).value);
-  for (const k in io) io[k] = false;
+  for (const k in io) delete io[k];
   saveCfg(); buildHud();
 }
 $('#btnSettings').onclick = openSettings;
@@ -696,9 +777,43 @@ $('#btnDisconnect').onclick = () => { cfg.autoConnect = false; saveCfg(); discon
 
 /* ================= AR (이미지 마커 추적) ================= */
 let mindar = null, anchor = null, arOn = false;
-const arHolder = new THREE.Group();
-arHolder.rotation.x = Math.PI / 2;           // 마커를 책상에 눕혔을 때 설비가 위로 서도록
-arHolder.scale.setScalar(1 / 0.9);          // 마커 가로폭 = 베이스 플레이트 가로폭
+const arHolder = new THREE.Group(), arSpin = new THREE.Group();
+arHolder.add(arSpin);
+const AR_DEFAULT = { scale: 1.5, rot: 0, tilt: 0 };
+const arUser = { ...AR_DEFAULT };
+function applyAR() {
+  arUser.scale = clamp(arUser.scale, 0.5, 3);
+  arUser.rot = ((arUser.rot + 540) % 360) - 180;
+  arUser.tilt = clamp(arUser.tilt, 0, 70);
+  arHolder.scale.setScalar(arUser.scale / 0.9);                 // 1.0 = 마커 가로폭
+  arHolder.rotation.set(Math.PI / 2 - arUser.tilt * D2R, 0, 0);  // 마커 면 위에 세우고, 세워보기만큼 앞으로 기울임
+  arSpin.rotation.y = arUser.rot * D2R;
+  $('#arScale').value = arUser.scale; $('#arRot').value = arUser.rot; $('#arTilt').value = arUser.tilt;
+}
+applyAR();
+$('#arScale').oninput = e => { arUser.scale = +e.target.value; applyAR(); };
+$('#arRot').oninput = e => { arUser.rot = +e.target.value; applyAR(); };
+$('#arTilt').oninput = e => { arUser.tilt = +e.target.value; applyAR(); };
+$('#arReset').onclick = () => { Object.assign(arUser, AR_DEFAULT); applyAR(); };
+
+// 손가락 제스처: 한 손가락 = 돌리기, 두 손가락 = 크기
+const UI_SEL = 'button, input, .hud, .bar, .artools, dialog, #logPanel, #intro';
+let touch0 = null;
+addEventListener('touchstart', e => {
+  if (!arOn || e.target.closest(UI_SEL)) { touch0 = null; return; }
+  const t = e.touches;
+  touch0 = t.length === 1 ? { x: t[0].clientX, rot: arUser.rot }
+    : { d: Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY), scale: arUser.scale };
+}, { passive: true });
+addEventListener('touchmove', e => {
+  if (!arOn || !touch0) return;
+  const t = e.touches;
+  if (t.length === 1 && touch0.x !== undefined) arUser.rot = touch0.rot + (t[0].clientX - touch0.x) * 0.5;
+  else if (t.length === 2 && touch0.d) arUser.scale = touch0.scale * Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) / touch0.d;
+  applyAR();
+}, { passive: true });
+addEventListener('touchend', e => { if (e.touches.length === 0) touch0 = null; }, { passive: true });
+
 function setupMindAR() {
   mindar = new MindARThree({
     container: $('#ar'), imageTargetSrc: './targets.mind',
@@ -712,7 +827,7 @@ function setupMindAR() {
   mindar.scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
   anchor = mindar.addAnchor(0);
   anchor.group.add(arHolder);
-  anchor.onTargetFound = () => { window.__arFound = (window.__arFound || 0) + 1; hint(''); };
+  anchor.onTargetFound = () => { window.__arFound = (window.__arFound || 0) + 1; hint('한 손가락으로 돌리고, 두 손가락으로 크기를 바꿔요'); setTimeout(() => arOn && hint(''), 4000); };
   anchor.onTargetLost = () => { if (arOn) hint('마커를 다시 비춰주세요'); };
 }
 async function startAR() {
@@ -720,12 +835,13 @@ async function startAR() {
   if (arOn) return;
   try {
     if (!mindar) setupMindAR();
-    arHolder.add(twin);
+    arSpin.add(twin);
+    if (!$('#hud').classList.contains('collapsed')) $('#btnHud').click();
     document.body.classList.add('ar'); arOn = true;
     $('#btnAR').textContent = 'AR 종료';
     renderer.setAnimationLoop(null);
     await mindar.start();
-    hint('인쇄한 마커를 화면 가득 비춰주세요');
+    hint('인쇄한 마커를 화면에 비춰주세요');
     mindar.renderer.setAnimationLoop(() => {
       update(Math.min(clock.getDelta(), 0.1));
       mindar.renderer.render(mindar.scene, mindar.camera);
@@ -739,7 +855,6 @@ async function startAR() {
 function stopAR() {
   if (mindar) { try { mindar.renderer.setAnimationLoop(null); mindar.stop(); } catch (e) {} }
   arOn = false; document.body.classList.remove('ar'); hint('');
-  twin.position.set(0, 0, 0); twin.rotation.set(0, 0, 0); twin.scale.setScalar(1); twin.visible = true;
   scene.add(twin);
   $('#btnAR').textContent = 'AR 보기';
   renderer.setAnimationLoop(loop3D); onResize();
@@ -765,10 +880,10 @@ function loop3D() {
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(loop3D);
-const VIEW_DIR = new THREE.Vector3(0.7, 0.52, 0.95).normalize();
+const VIEW_DIR = new THREE.Vector3(0.7, 0.55, 0.95).normalize();
 function frameCamera() {
   const a = innerWidth / innerHeight;
-  const dist = a < 1 ? 1.25 / Math.pow(a, 0.75) : 1.25;
+  const dist = a < 1 ? 1.2 / Math.pow(a, 0.75) : 1.2;
   camera.position.copy(controls.target).addScaledVector(VIEW_DIR, dist);
   controls.update();
 }
@@ -779,6 +894,7 @@ function onResize() {
 frameCamera();
 addEventListener('resize', onResize);
 
+setStatus('sim');
 log('모드', '자동 시퀀스');
 if (cfg.autoConnect) connect();
 </script>
