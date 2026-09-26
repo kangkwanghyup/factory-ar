@@ -358,15 +358,17 @@ const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
 const rbox = (w, h, d, r, m) => new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, r), m);
 const cyl = (rt, rb, h, m, seg = 24) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
 const at = (o, x, y, z) => { o.position.set(x, y, z); return o; };
-function label(text, w = 0.095) {
-  const c = document.createElement('canvas'); c.width = 320; c.height = 96;
-  const x = c.getContext('2d');
-  x.fillStyle = 'rgba(255,255,255,.92)'; x.beginPath(); x.roundRect(4, 14, 312, 68, 18); x.fill();
-  x.fillStyle = '#1c2530'; x.font = '600 44px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, 160, 50);
+function label(text, h = 0.028) {
+  const font = '600 44px "IBM Plex Sans KR", sans-serif';
+  const c = document.createElement('canvas'); let x = c.getContext('2d'); x.font = font;
+  c.width = Math.max(160, Math.ceil(x.measureText(text).width) + 56); c.height = 96;
+  x = c.getContext('2d');
+  x.fillStyle = 'rgba(255,255,255,.92)'; x.beginPath(); x.roundRect(4, 14, c.width - 8, 68, 18); x.fill();
+  x.fillStyle = '#1c2530'; x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text, c.width / 2, 50);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false }));
-  sp.scale.set(w, w * 0.3, 1); sp.renderOrder = 10; return sp;
+  sp.scale.set(h * c.width / 96, h, 1); sp.renderOrder = 10; return sp;
 }
 
 const twin = new THREE.Group(); scene.add(twin);
@@ -378,13 +380,13 @@ const twin = new THREE.Group(); scene.add(twin);
   g.fillStyle = '#8e969f'; for (let y = 0; y < 512; y += 32) g.fillRect(0, y + 13, 64, 6);
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 1); t.colorSpace = THREE.SRGBColorSpace;
   const top = mat(0xffffff, { map: t, metalness: 0.5, roughness: 0.45 });
-  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.56), [M.alu, M.alu, top, M.alu, M.alu, M.alu]);
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.62), [M.alu, M.alu, top, M.alu, M.alu, M.alu]);
   twin.add(at(plate, 0, 0.01, 0));
 }
 
 // 컨베이어 (초록 벨트, 알루미늄 프레임)
 const CONV = { x0: -0.3, x1: 0.3, z: -0.1, y: 0.12, w: 0.05 };
-const X0_X = -0.14, VIS_X = 0.0, X2_X = 0.265, BELT_V = 0.08;
+const X0_X = -0.15, VIS_X = 0.05, X2_X = 0.265, BELT_V = 0.08;
 const convLen = CONV.x1 - CONV.x0, convMid = (CONV.x0 + CONV.x1) / 2;
 for (const dz of [-0.036, 0.036]) twin.add(at(box(convLen + 0.03, 0.03, 0.012, M.alu), convMid, CONV.y - 0.016, CONV.z + dz));
 for (const x of [CONV.x0 + 0.04, convMid, CONV.x1 - 0.04]) for (const dz of [-0.036, 0.036])
@@ -398,7 +400,26 @@ twin.add(at(box(convLen, 0.012, CONV.w, M.belt), convMid, CONV.y - 0.007, CONV.z
 const beltTop = new THREE.Mesh(new THREE.PlaneGeometry(convLen, CONV.w), new THREE.MeshStandardMaterial({ map: beltTex, roughness: 0.7 }));
 beltTop.rotation.x = -Math.PI / 2; at(beltTop, convMid, CONV.y + 0.0005, CONV.z); twin.add(beltTop);
 for (const x of [CONV.x0, CONV.x1]) { const r = cyl(0.008, 0.008, CONV.w + 0.02, M.alu); r.rotation.x = Math.PI / 2; twin.add(at(r, x, CONV.y - 0.007, CONV.z)); }
-{ const m = cyl(0.018, 0.018, 0.05, M.black); m.rotation.x = Math.PI / 2; twin.add(at(m, CONV.x0 + 0.02, CONV.y - 0.03, CONV.z - 0.065)); }
+// 시작 쪽 체인 구동부 (스프로킷 두 개 + 체인)
+{
+  const sideZ = CONV.z + 0.052;
+  for (const [x, y, r] of [[CONV.x0, CONV.y - 0.007, 0.014], [CONV.x0 + 0.05, CONV.y - 0.065, 0.012]]) {
+    const sp = cyl(r, r, 0.006, M.dark, 18); sp.rotation.x = Math.PI / 2; twin.add(at(sp, x, y, sideZ));
+  }
+  const chain = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.004, 6, 28), M.black);
+  chain.scale.set(0.9, 0.55, 1); chain.rotation.z = -0.85; twin.add(at(chain, CONV.x0 + 0.025, CONV.y - 0.036, sideZ + 0.004));
+  const mot = cyl(0.02, 0.02, 0.05, M.dark); mot.rotation.x = Math.PI / 2; twin.add(at(mot, CONV.x0 + 0.05, CONV.y - 0.065, CONV.z));
+  twin.add(at(box(0.07, 0.1, 0.006, M.alu), CONV.x0 + 0.02, CONV.y - 0.04, CONV.z - 0.05));
+}
+// 컨베이어 왼쪽 배선 덕트
+function duct(len, x, z, alongX = true) {
+  const g = new THREE.Group(); at(g, x, 0.035, z); if (!alongX) g.rotation.y = Math.PI / 2;
+  const dm = mat(0xf2f3f4, { roughness: 0.6 });
+  g.add(at(box(len, 0.004, 0.03, dm), 0, -0.013, 0));
+  for (let t = -len / 2 + 0.006; t < len / 2; t += 0.012) for (const dz of [-0.013, 0.013]) g.add(at(box(0.008, 0.026, 0.004, dm), t, 0, dz));
+  twin.add(g);
+}
+duct(0.6, 0.0, CONV.z - 0.065);
 twin.add(at(box(0.02, 0.03, CONV.w + 0.03, M.black), CONV.x1 - 0.005, CONV.y + 0.012, CONV.z)); // 끝단 스토퍼
 
 // 근접 센서 (벨트 위에서 아래를 봄)
@@ -409,32 +430,77 @@ function sensor(x, name) {
   twin.add(at(cyl(0.009, 0.009, 0.045, M.alu), x, CONV.y + 0.055, CONV.z));
   twin.add(at(cyl(0.0095, 0.0095, 0.012, M.black), x, CONV.y + 0.084, CONV.z));
   twin.add(at(new THREE.Mesh(new THREE.SphereGeometry(0.004, 10, 8), led), x, CONV.y + 0.092, CONV.z));
-  twin.add(at(label(name, 0.08), x, CONV.y + 0.125, CONV.z));
+  twin.add(at(label(name), x, CONV.y + 0.125, CONV.z));
   return led;
 }
 const ledX0 = sensor(X0_X, 'X0');
 const ledX2 = sensor(X2_X, 'X2');
 
 // 비전 카메라 (높은 기둥 + 위에서 내려다보는 웹캠)
-twin.add(at(box(0.022, 0.36, 0.022, M.alu), VIS_X - 0.03, 0.2, CONV.z - 0.07));
-twin.add(at(box(0.05, 0.012, 0.03, M.alu), VIS_X - 0.03, 0.375, CONV.z - 0.07));
-twin.add(at(box(0.012, 0.012, 0.07, M.dark), VIS_X - 0.01, 0.37, CONV.z - 0.035));
-twin.add(at(rbox(0.07, 0.03, 0.035, 0.01, M.black), VIS_X, 0.35, CONV.z));
+twin.add(at(box(0.03, 0.34, 0.03, M.alu), VIS_X - 0.02, 0.19, CONV.z - 0.11));
+twin.add(at(box(0.07, 0.006, 0.07, M.alu), VIS_X - 0.02, 0.023, CONV.z - 0.11));
+twin.add(at(box(0.05, 0.006, 0.13, M.alu), VIS_X - 0.01, 0.363, CONV.z - 0.055));
+twin.add(at(box(0.05, 0.035, 0.006, M.alu), VIS_X - 0.01, 0.345, CONV.z + 0.01));
+twin.add(at(rbox(0.075, 0.028, 0.032, 0.01, M.black), VIS_X, 0.33, CONV.z));
+{ const lens = cyl(0.009, 0.009, 0.006, M.dark, 16); twin.add(at(lens, VIS_X, 0.314, CONV.z)); }
 const fovMat = new THREE.MeshBasicMaterial({ color: 0x5aa9e6, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false });
 const fov = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.22, 4, 1, true), fovMat);
 fov.rotation.y = Math.PI / 4; twin.add(at(fov, VIS_X, 0.225, CONV.z));
-twin.add(at(label('비전 D100', 0.13), VIS_X, 0.405, CONV.z));
+twin.add(at(label('비전 D100'), VIS_X, 0.405, CONV.z));
 
-// PLC, 단자대, 조작 버튼
-twin.add(at(box(0.07, 0.09, 0.1, M.plc), -0.16, 0.065, 0.1));
-twin.add(at(box(0.05, 0.09, 0.1, M.black), -0.1, 0.065, 0.1));
-twin.add(at(box(0.2, 0.02, 0.03, M.dark), -0.13, 0.03, 0.2));
-twin.add(at(box(0.09, 0.03, 0.12, mat(0x9aa1a9, { metalness: 0.4 })), -0.29, 0.035, 0.12));
-twin.add(at(rbox(0.1, 0.05, 0.06, 0.008, M.white), -0.3, 0.045, 0.22));
+// 제어부: 미쓰비시 PLC 랙, 파워서플라이, 단자대, 배선 덕트 (사진 기준)
+{
+  const rackZ = 0.15, rackY = 0.02;
+  twin.add(at(box(0.24, 0.008, 0.035, M.alu), -0.08, rackY + 0.004, rackZ - 0.03));               // DIN 레일
+  twin.add(at(rbox(0.06, 0.1, 0.09, 0.004, M.plc), -0.17, rackY + 0.05, rackZ));                  // 빨간 전원/CPU
+  twin.add(at(box(0.061, 0.03, 0.02, mat(0x9a2f22)), -0.17, rackY + 0.07, rackZ + 0.04));
+  for (let k = 0; k < 4; k++) {                                                                      // 검은 I/O 모듈 + 단자
+    const x = -0.12 + k * 0.035;
+    twin.add(at(box(0.033, 0.1, 0.09, M.black), x, rackY + 0.05, rackZ));
+    twin.add(at(box(0.028, 0.06, 0.012, mat(0xb9bec4)), x, rackY + 0.06, rackZ + 0.051));
+    for (let t = 0; t < 5; t++) twin.add(at(box(0.004, 0.004, 0.02, mat(0xf2c230)), x - 0.008 + t * 0.004, rackY + 0.035, rackZ + 0.065));
+  }
+  const pc = document.createElement('canvas'); pc.width = pc.height = 64;
+  const pg = pc.getContext('2d'); pg.fillStyle = '#b9bec4'; pg.fillRect(0, 0, 64, 64); pg.fillStyle = '#50565d';
+  for (let y = 4; y < 64; y += 8) for (let x = 4 + ((y / 8) % 2) * 4; x < 64; x += 8) { pg.beginPath(); pg.arc(x, y, 2.3, 0, 7); pg.fill(); }
+  const pt = new THREE.CanvasTexture(pc); pt.wrapS = pt.wrapT = THREE.RepeatWrapping; pt.repeat.set(3, 2); pt.colorSpace = THREE.SRGBColorSpace;
+  const psu = mat(0xffffff, { map: pt, metalness: 0.5, roughness: 0.4 });
+  twin.add(at(new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.035, 0.085), [M.alu, M.alu, psu, M.alu, psu, M.alu]), -0.17, 0.0375, 0.245)); // 파워서플라이
+  twin.add(at(box(0.012, 0.012, 0.18, M.black), 0.02, 0.026, 0.2));                                  // 단자대
+  for (let t = 0; t < 12; t++) twin.add(at(cyl(0.003, 0.003, 0.004, M.alu, 8), 0.02, 0.034, 0.12 + t * 0.014));
+  duct(0.5, -0.05, 0.295);
+  duct(0.26, -0.255, 0.16, false);
+  duct(0.22, 0.075, 0.2, false);
+}
+// 라즈베리파이 (MQTT 브리지) — 컨베이어 뒤쪽
+{
+  const pi = new THREE.Group(); at(pi, 0.14, 0.024, -0.25); twin.add(pi);
+  pi.add(box(0.085, 0.004, 0.056, M.pcb || mat(0x1f6f4a)));
+  pi.add(at(box(0.018, 0.014, 0.014, M.alu), 0.035, 0.009, -0.016));
+  pi.add(at(box(0.018, 0.014, 0.014, M.alu), 0.035, 0.009, 0.004));
+  pi.add(at(box(0.018, 0.012, 0.016, M.alu), 0.035, 0.008, 0.022));
+  pi.add(at(box(0.012, 0.002, 0.012, M.dark), -0.01, 0.003, 0.0));
+  pi.add(at(label('Raspberry Pi'), 0, 0.05, 0));
+}
+// 컨베이어 옆 흰색 표시기 (받침대 위)
+{
+  twin.add(at(cyl(0.022, 0.026, 0.006, M.white, 24), 0.1, 0.023, -0.02));
+  twin.add(at(cyl(0.007, 0.007, 0.11, M.white, 12), 0.1, 0.08, -0.02));
+  twin.add(at(rbox(0.045, 0.06, 0.035, 0.005, M.white), 0.1, 0.16, -0.02));
+  twin.add(at(box(0.03, 0.035, 0.002, M.dark), 0.1, 0.16, -0.001));
+}
+// 조작 버튼함 (위 초록 = 시작 X4, 아래 빨강 = 정지 X6)
 const btnMat = { start: mat(0x2e9e5b, { emissive: 0x2e9e5b, emissiveIntensity: 0.05 }), stop: mat(0xd8322a, { emissive: 0xd8322a, emissiveIntensity: 0.05 }) };
-twin.add(at(cyl(0.012, 0.012, 0.012, btnMat.start), -0.32, 0.075, 0.22));
-twin.add(at(cyl(0.012, 0.012, 0.012, btnMat.stop), -0.28, 0.075, 0.22));
-twin.add(at(label('X4  X6', 0.09), -0.3, 0.11, 0.22));
+{
+  twin.add(at(rbox(0.075, 0.07, 0.12, 0.01, mat(0xc9ccd0, { roughness: 0.55 })), 0.35, 0.055, 0.245));
+  for (const [z, m] of [[0.215, btnMat.start], [0.275, btnMat.stop]]) {
+    twin.add(at(cyl(0.017, 0.017, 0.006, M.alu, 24), 0.35, 0.093, z));
+    twin.add(at(cyl(0.013, 0.013, 0.008, m, 24), 0.35, 0.099, z));
+  }
+  twin.add(at(label('X4 시작 · X6 정지'), 0.35, 0.14, 0.245));
+  twin.add(at(rbox(0.07, 0.03, 0.05, 0.004, mat(0xd6d8db)), 0.23, 0.035, 0.265));                  // RS485 모듈
+  twin.add(at(box(0.03, 0.035, 0.03, mat(0xe8e8e8, { transparent: true, opacity: 0.8 })), 0.23, 0.04, 0.215)); // 릴레이
+}
 
 // 종이컵 두 개 (컨베이어 오른쪽, 나란히)
 const CUP_H = 0.085;
@@ -449,10 +515,18 @@ for (const name of ['yellow', 'red']) {
 }
 
 /* ---------- Dobot Magician + 흡착 컵 ---------- */
-const RB = new THREE.Vector3(0.37, 0.02, 0.08), YAW = Math.PI; // 컨베이어 끝 오른쪽, 컨베이어 쪽을 바라봄
+const RB = new THREE.Vector3(0.37, 0.06, 0.08), YAW = Math.PI; // 컨베이어 끝 오른쪽, 컨베이어 쪽을 바라봄
 const H0 = 0.138, L1 = 0.135, L2 = 0.147, TF = 0.06, TL = 0.075;
 const robot = at(new THREE.Group(), RB.x, RB.y, RB.z); robot.rotation.y = YAW; twin.add(robot);
 robot.add(at(rbox(0.158, 0.045, 0.158, 0.012, M.white), 0, 0.0225, 0));
+// 로봇 받침 알루미늄 프레임 (사진처럼 바닥에서 띄움)
+{
+  const fz = 0.2, fh = 0.04, fy = 0.02 + fh / 2;
+  for (const dz of [-fz / 2, fz / 2]) twin.add(at(box(fz + 0.02, 0.02, 0.02, M.alu), RB.x, fy + 0.01, RB.z + dz));
+  for (const dx of [-fz / 2, fz / 2]) twin.add(at(box(0.02, 0.02, fz, M.alu), RB.x + dx, fy + 0.01, RB.z));
+  for (const dx of [-fz / 2, fz / 2]) for (const dz of [-fz / 2, fz / 2]) twin.add(at(box(0.02, fh, 0.02, M.alu), RB.x + dx, fy, RB.z + dz));
+  twin.add(at(box(fz, 0.004, fz, M.alu), RB.x, 0.058, RB.z));
+}
 robot.add(at(cyl(0.072, 0.072, 0.006, M.dark, 40), 0, 0.048, 0));
 const j1 = at(new THREE.Group(), 0, 0.05, 0); robot.add(j1);
 j1.add(at(cyl(0.064, 0.066, 0.045, M.white, 40), 0, 0.0225, 0));
